@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Iterable
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -51,6 +50,12 @@ class ValuationService:
     def _latest_snapshot_time_for_cash(self):
         stmt = select(CashBalanceSnapshot.snapshot_time).order_by(CashBalanceSnapshot.snapshot_time.desc()).limit(1)
         return self.db.scalar(stmt)
+    
+    def get_latest_holdings_snapshot_time(self):
+        return self._latest_snapshot_time_for_holdings()
+
+    def get_latest_cash_snapshot_time(self):
+        return self._latest_snapshot_time_for_cash()
 
     def get_latest_holdings(self) -> list[HoldingSnapshot]:
         snapshot_time = self._latest_snapshot_time_for_holdings()
