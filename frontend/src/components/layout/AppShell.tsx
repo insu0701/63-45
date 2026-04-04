@@ -1,10 +1,14 @@
 import type { ReactNode } from "react";
 
+export type PageKey = "overview" | "holdings";
+
 type Props = {
+  currentPage: PageKey;
+  onNavigate: (page: PageKey) => void;
   children: ReactNode;
 };
 
-export function AppShell({ children }: Props) {
+export function AppShell({ currentPage, onNavigate, children }: Props) {
   return (
     <div
       style={{
@@ -28,9 +32,22 @@ export function AppShell({ children }: Props) {
           }}
         >
           <div style={{ fontSize: "20px", fontWeight: 700, marginBottom: "24px" }}>63-45</div>
+
           <div style={{ display: "grid", gap: "10px" }}>
-            <div style={navItemActive}>Overview</div>
-            <div style={navItemDisabled}>Holdings</div>
+            <button
+              onClick={() => onNavigate("overview")}
+              style={currentPage === "overview" ? navItemActive : navItem}
+            >
+              Overview
+            </button>
+
+            <button
+              onClick={() => onNavigate("holdings")}
+              style={currentPage === "holdings" ? navItemActive : navItem}
+            >
+              Holdings
+            </button>
+
             <div style={navItemDisabled}>Allocation</div>
             <div style={navItemDisabled}>Sync / Health</div>
           </div>
@@ -42,10 +59,24 @@ export function AppShell({ children }: Props) {
   );
 }
 
+const navItem: React.CSSProperties = {
+  padding: "10px 12px",
+  borderRadius: "8px",
+  background: "transparent",
+  color: "white",
+  border: "1px solid transparent",
+  textAlign: "left",
+  cursor: "pointer",
+};
+
 const navItemActive: React.CSSProperties = {
   padding: "10px 12px",
   borderRadius: "8px",
   background: "#1f2937",
+  color: "white",
+  border: "1px solid transparent",
+  textAlign: "left",
+  cursor: "pointer",
   fontWeight: 600,
 };
 
