@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-export type PageKey = "overview" | "holdings";
+export type PageKey = "overview" | "holdings" | "allocation";
 
 type Props = {
   currentPage: PageKey;
@@ -48,7 +48,13 @@ export function AppShell({ currentPage, onNavigate, children }: Props) {
               Holdings
             </button>
 
-            <div style={navItemDisabled}>Allocation</div>
+            <button
+              onClick={() => onNavigate("allocation")}
+              style={currentPage === "allocation" ? navItemActive : navItem}
+            >
+              Allocation
+            </button>
+
             <div style={navItemDisabled}>Sync / Health</div>
           </div>
         </aside>
