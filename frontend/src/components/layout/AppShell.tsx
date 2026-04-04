@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-export type PageKey = "overview" | "holdings" | "allocation";
+export type PageKey = "overview" | "holdings" | "allocation" | "sync";
 
 type Props = {
   currentPage: PageKey;
@@ -55,7 +55,12 @@ export function AppShell({ currentPage, onNavigate, children }: Props) {
               Allocation
             </button>
 
-            <div style={navItemDisabled}>Sync / Health</div>
+            <button
+              onClick={() => onNavigate("sync")}
+              style={currentPage === "sync" ? navItemActive : navItem}
+            >
+              Sync / Health
+            </button>
           </div>
         </aside>
 
@@ -84,10 +89,4 @@ const navItemActive: React.CSSProperties = {
   textAlign: "left",
   cursor: "pointer",
   fontWeight: 600,
-};
-
-const navItemDisabled: React.CSSProperties = {
-  padding: "10px 12px",
-  borderRadius: "8px",
-  color: "#9ca3af",
 };

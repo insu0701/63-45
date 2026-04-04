@@ -2,8 +2,9 @@ import { useState } from "react";
 
 import { AllocationPage } from "./pages/AllocationPage";
 import { AppShell, type PageKey } from "./components/layout/AppShell";
-import { OverviewPage } from "./pages/OverviewPage";
 import { HoldingsPage } from "./pages/HoldingsPage";
+import { OverviewPage } from "./pages/OverviewPage";
+import { SyncPage } from "./pages/SyncPage";
 
 function App() {
   const [currentPage, setCurrentPage] = useState<PageKey>("overview");
@@ -13,6 +14,7 @@ function App() {
       {currentPage === "overview" && <OverviewPage />}
       {currentPage === "holdings" && <HoldingsPage />}
       {currentPage === "allocation" && <AllocationPage />}
+      {currentPage === "sync" && <SyncPage />}
     </AppShell>
   );
 }
