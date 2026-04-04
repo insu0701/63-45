@@ -12,6 +12,9 @@ Completed through:
 - Step 4: portfolio calculation layer
 - Step 5: backend API layer
 - Step 6: frontend API integration + real Overview page
+- Step 7: real Holdings page UI
+- Step 8: Allocation page UI
+- Step 9: Sync / Data Health page UI
 
 Current working features:
 
@@ -19,8 +22,9 @@ Current working features:
 - SQLite database + Alembic migrations
 - seeded portfolio snapshot data
 - valuation / exposure / concentration services
-- API endpoints for overview, holdings, allocation
-- React frontend Overview page rendering live backend data
+- sync / health service
+- API endpoints for overview, holdings, allocation, and sync status
+- React frontend pages for Overview, Holdings, Allocation, and Sync / Health
 
 ## Stack
 
@@ -30,7 +34,6 @@ Current working features:
 - Database: SQLite
 - Frontend: React + TypeScript + Vite
 - Data fetching: TanStack Query
-- Tables: TanStack Table
 - Charts: Recharts
 
 ## Base currency

@@ -20,10 +20,11 @@ The immediate objective is to build a **read-only portfolio review platform** th
 
 This dashboard will become the foundation for later phases:
 
-1. strategy overlay
-2. shadow-mode signal review
-3. assisted-mode order review
-4. live automation
+1. real sync workflows
+2. strategy overlay
+3. shadow-mode signal review
+4. assisted-mode order review
+5. live automation
 
 ---
 
@@ -186,7 +187,7 @@ The dashboard must reflect actual holdings and balances, not hypothetical strate
 
 ### 6.2 Normalize Before Display
 
-The UI must not depend directly on raw broker payloads.
+The UI must not depend directly on raw broker payloads.  
 All source data must first be normalized into internal portfolio models.
 
 ### 6.3 Snapshot-Based Architecture
@@ -239,10 +240,10 @@ The Holdings page displays:
 
 The Allocation page displays:
 
+- sleeve allocation
 - country allocation
 - sector allocation
 - currency allocation
-- concentration table
 
 ### 7.5 Working Sync / Data Health View
 
@@ -276,21 +277,25 @@ Read-only portfolio dashboard (`v0`)
 
 ### Phase B
 
-Strategy-overlay-ready schema and UI hooks
+Real sync workflows
 
 ### Phase C
 
-Shadow-mode signal engine
+Strategy-overlay-ready schema and UI hooks
 
 ### Phase D
 
-Assisted-mode review and proposed orders
+Shadow-mode signal engine
 
 ### Phase E
 
+Assisted-mode review and proposed orders
+
+### Phase F
+
 Live broker execution automation
 
-This order is intentional.
+This order is intentional.  
 The project must not skip directly from `v0` to live auto-trading.
 
 ---
@@ -311,14 +316,17 @@ The project is trying to be:
 
 ---
 
-## 11. Immediate Next Step After Step 0
+## 11. Current Implementation Status
 
-After this scope file is accepted, the next step is:
+As of the latest completed phase, the project has implemented:
 
-1. initialize repo structure
-2. build database schema
-3. seed mock data
-4. implement valuation layer
-5. expose `/api/v1/overview`
+- backend bootstrap
+- frontend bootstrap
+- SQLite schema + Alembic migrations
+- seed portfolio data
+- valuation / exposure / concentration services
+- backend API endpoints for overview, holdings, allocation, and sync status
+- frontend pages for Overview, Holdings, Allocation, and Sync / Health
 
-That is the correct starting point.
+The project remains read-only.  
+No broker write actions, order placement, or live trading automation are included in the current implemented scope.
