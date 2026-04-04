@@ -62,7 +62,7 @@ The following are in scope for `v0`:
 
 - Korea holdings and balances from Kiwoom (read-only)
 - US holdings via manual/CSV import
-- FX rates for KRW base-currency reporting
+- FX rates for USD base-currency reporting
 - price data sufficient for valuation display
 
 ### 3.3 Core Calculations
@@ -169,7 +169,7 @@ The following decisions are fixed for `v0`:
 
 ### 5.4 Base Currency
 
-- KRW
+- USD
 
 ### 5.5 Primary Broker Assumption
 
