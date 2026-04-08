@@ -6,21 +6,37 @@ __pycache__/
 .mypy_cache/
 .coverage
 
-# SQLite
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Local databases
 *.db
 *.sqlite3
 
-# Env
-.env
-
-# Node
+# Node / frontend build
 frontend/node_modules/
 frontend/dist/
 frontend/.vite/
 
+# Raw broker / debug data
+backend/raw/
+debug/
+tmp/
+scratch/
+
+# Local exported data
+*_debug.json
+*_debug.csv
+cash_*.json
+holdings_*.json
+account_numbers_*.json
+daily_status_*.json
+
+# Logs
+*.log
+
 # OS / editor
 .DS_Store
 .vscode/
-
-# Misc
-*.log

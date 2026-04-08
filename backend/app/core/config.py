@@ -12,6 +12,21 @@ class Settings(BaseSettings):
     database_url: str = "sqlite:///./mini_hedge_fund.db"
     frontend_origin: str = "http://localhost:5173"
 
+    kiwoom_base_url: str = "https://api.kiwoom.com"
+    kiwoom_mock_base_url: str = "https://mockapi.kiwoom.com"
+    kiwoom_use_mock: bool = False
+
+    kiwoom_app_key: str = ""
+    kiwoom_secret_key: str = ""
+    kiwoom_account_no: str = ""
+
+    kiwoom_timeout_seconds: int = 15
+    kiwoom_raw_archive_dir: str = "backend/raw/kiwoom"
+
+    @property
+    def kiwoom_active_base_url(self) -> str:
+        return self.kiwoom_mock_base_url if self.kiwoom_use_mock else self.kiwoom_base_url
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
