@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from backend.app.api.deps import get_db
 from backend.app.api.response import build_response
 from backend.app.services.health_service import HealthService
+from backend.app.services.sync.kiwoom_sync_service import KiwoomSyncService
 
 router = APIRouter(prefix="/api/v1/sync", tags=["sync"])
 
@@ -76,3 +77,23 @@ def get_sync_status(
     }
 
     return build_response(data=data, snapshot_time=snapshot_time)
+
+@router.post("/kiwoom")
+def run_kiwoom_sync(db: Session = Depends(get_db)):
+    service = KiwoomSyncService(db)
+    result = service.run()
+
+    data = {
+        "sync_run_id": result.sync_run_id,
+        "snapshot_time": result.snapshot_time.isoformat(),
+        "holdings_written": result.holdings_written,
+        "cash_rows_written": result.cash_rows_written,
+        "prices_written": result.prices_written,
+        "carry_forward_holdings": result.carry_forward_holdings,
+        "carry_forward_cash": result.carry_forward_cash,
+        "warning_count": result.warning_count,
+        "error_count": result.error_count,
+        "archive_paths": result.archive_paths,
+    }
+
+    return build_response(data=data, snapshot_time=result.snapshot_time)

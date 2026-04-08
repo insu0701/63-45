@@ -70,11 +70,17 @@ class HealthService:
         if latest_timestamp is None:
             return None
 
-        return self.db.scalar(
+        values = self.db.scalars(
             select(source_column)
             .where(ts_column == latest_timestamp)
-            .limit(1)
-        )
+            .distinct()
+        ).all()
+
+        cleaned = sorted({value for value in values if value})
+        if not cleaned:
+            return None
+
+        return ", ".join(cleaned)
 
     def _status_from_timestamp(self, value: datetime | None, freshness_hours: int) -> tuple[str, str]:
         value = self._normalize_dt(value)
