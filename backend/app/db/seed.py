@@ -15,6 +15,7 @@ from backend.app.db.models import (
     SyncRun,
 )
 
+from backend.app.core.config import settings
 
 def d(value: str) -> Decimal:
     return Decimal(value)
@@ -32,8 +33,17 @@ def reset_tables(db) -> None:
     db.query(Account).delete()
     db.commit()
 
+def ensure_seed_allowed() -> None:
+    if settings.app_env.lower() != "development":
+        raise RuntimeError("Seeding is only allowed when APP_ENV=development.")
+
+    if not settings.enable_dev_seed_commands:
+        raise RuntimeError(
+            "Seed command is disabled. Set ENABLE_DEV_SEED_COMMANDS=true to run dev seed."
+        )
 
 def seed() -> None:
+    ensure_seed_allowed()
     db = SessionLocal()
     try:
         reset_tables(db)

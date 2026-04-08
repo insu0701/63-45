@@ -15,6 +15,9 @@ from backend.app.db.models import (
     SyncRun,
 )
 
+from backend.app.core.config import settings
+from backend.app.services.active_snapshot_service import ActiveSnapshotService
+
 
 @dataclass
 class DataSourceStatus:
@@ -40,6 +43,7 @@ class SyncStatusSummary:
 class HealthService:
     def __init__(self, db: Session):
         self.db = db
+        self.active_snapshot_service = ActiveSnapshotService(db)
 
     def _normalize_dt(self, value: datetime | None) -> datetime | None:
         if value is None:
@@ -48,10 +52,11 @@ class HealthService:
             return value.replace(tzinfo=UTC)
         return value.astimezone(UTC)
 
-    def _latest_timestamp_and_count(self, model, ts_column):
-        latest_timestamp = self.db.scalar(
-            select(func.max(ts_column)).select_from(model)
-        )
+    def _latest_timestamp_and_count(self, model, ts_column, latest_timestamp=None):
+        if latest_timestamp is None:
+            latest_timestamp = self.db.scalar(
+                select(func.max(ts_column)).select_from(model)
+            )
 
         if latest_timestamp is None:
             return None, 0
@@ -62,10 +67,11 @@ class HealthService:
 
         return latest_timestamp, int(record_count)
 
-    def _latest_source_type(self, model, ts_column, source_column):
-        latest_timestamp = self.db.scalar(
-            select(func.max(ts_column)).select_from(model)
-        )
+    def _latest_source_type(self, model, ts_column, source_column, latest_timestamp=None):
+        if latest_timestamp is None:
+            latest_timestamp = self.db.scalar(
+                select(func.max(ts_column)).select_from(model)
+            )
 
         if latest_timestamp is None:
             return None
@@ -97,6 +103,13 @@ class HealthService:
         return "stale", f"{age_hours:.1f}h old"
 
     def get_data_source_statuses(self) -> list[DataSourceStatus]:
+        holdings_ts = self.active_snapshot_service.get_active_holdings_snapshot_time()
+        cash_ts = self.active_snapshot_service.get_active_cash_snapshot_time()
+        prices_ts = self.active_snapshot_service.get_active_price_snapshot_time()
+        fx_ts = self.db.scalar(
+            select(func.max(FxRateSnapshot.rate_timestamp)).select_from(FxRateSnapshot)
+        )
+
         definitions = [
             {
                 "source_key": "holdings",
@@ -104,7 +117,8 @@ class HealthService:
                 "model": HoldingSnapshot,
                 "ts_column": HoldingSnapshot.snapshot_time,
                 "source_column": HoldingSnapshot.source_type,
-                "freshness_hours": 24,
+                "freshness_hours": settings.active_data_freshness_hours,
+                "latest_timestamp": holdings_ts,
             },
             {
                 "source_key": "cash",
@@ -112,7 +126,8 @@ class HealthService:
                 "model": CashBalanceSnapshot,
                 "ts_column": CashBalanceSnapshot.snapshot_time,
                 "source_column": CashBalanceSnapshot.source_type,
-                "freshness_hours": 24,
+                "freshness_hours": settings.active_data_freshness_hours,
+                "latest_timestamp": cash_ts,
             },
             {
                 "source_key": "prices",
@@ -120,7 +135,8 @@ class HealthService:
                 "model": PriceSnapshot,
                 "ts_column": PriceSnapshot.price_timestamp,
                 "source_column": PriceSnapshot.source_type,
-                "freshness_hours": 24,
+                "freshness_hours": settings.active_data_freshness_hours,
+                "latest_timestamp": prices_ts,
             },
             {
                 "source_key": "fx",
@@ -128,7 +144,8 @@ class HealthService:
                 "model": FxRateSnapshot,
                 "ts_column": FxRateSnapshot.rate_timestamp,
                 "source_column": FxRateSnapshot.source_type,
-                "freshness_hours": 24,
+                "freshness_hours": settings.active_data_freshness_hours,
+                "latest_timestamp": fx_ts,
             },
         ]
 
@@ -138,11 +155,13 @@ class HealthService:
             latest_timestamp, record_count = self._latest_timestamp_and_count(
                 definition["model"],
                 definition["ts_column"],
+                latest_timestamp=definition["latest_timestamp"],
             )
             source_type = self._latest_source_type(
                 definition["model"],
                 definition["ts_column"],
                 definition["source_column"],
+                latest_timestamp=latest_timestamp,
             )
             status, detail = self._status_from_timestamp(
                 latest_timestamp,

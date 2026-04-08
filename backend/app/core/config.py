@@ -23,6 +23,11 @@ class Settings(BaseSettings):
     kiwoom_timeout_seconds: int = 15
     kiwoom_raw_archive_dir: str = "backend/raw/kiwoom"
 
+    allow_seed_fallback: bool = False
+    enable_dev_reset_commands: bool = True
+    enable_dev_seed_commands: bool = False
+    active_data_freshness_hours: int = 48
+
     @property
     def kiwoom_active_base_url(self) -> str:
         return self.kiwoom_mock_base_url if self.kiwoom_use_mock else self.kiwoom_base_url

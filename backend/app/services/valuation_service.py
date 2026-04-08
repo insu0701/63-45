@@ -7,6 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from backend.app.db.models import CashBalanceSnapshot, HoldingSnapshot
+from backend.app.services.active_snapshot_service import ActiveSnapshotService
 
 
 @dataclass
@@ -42,14 +43,13 @@ class PortfolioValuationSummary:
 class ValuationService:
     def __init__(self, db: Session):
         self.db = db
+        self.active_snapshot_service = ActiveSnapshotService(db)
 
     def _latest_snapshot_time_for_holdings(self):
-        stmt = select(HoldingSnapshot.snapshot_time).order_by(HoldingSnapshot.snapshot_time.desc()).limit(1)
-        return self.db.scalar(stmt)
+        return self.active_snapshot_service.get_active_holdings_snapshot_time()
 
     def _latest_snapshot_time_for_cash(self):
-        stmt = select(CashBalanceSnapshot.snapshot_time).order_by(CashBalanceSnapshot.snapshot_time.desc()).limit(1)
-        return self.db.scalar(stmt)
+        return self.active_snapshot_service.get_active_cash_snapshot_time()
     
     def get_latest_holdings_snapshot_time(self):
         return self._latest_snapshot_time_for_holdings()
