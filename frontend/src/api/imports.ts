@@ -1,9 +1,14 @@
 import { apiClient } from "./client";
 import type { ApiResponse } from "../types/api";
-import type { SyncActionResult } from "../types/imports";
+import type { FxSyncActionResult, SyncActionResult } from "../types/imports";
 
 export async function runKiwoomSync(): Promise<ApiResponse<SyncActionResult>> {
   const response = await apiClient.post<ApiResponse<SyncActionResult>>("/api/v1/sync/kiwoom");
+  return response.data;
+}
+
+export async function runFxSync(): Promise<ApiResponse<FxSyncActionResult>> {
+  const response = await apiClient.post<ApiResponse<FxSyncActionResult>>("/api/v1/sync/fx");
   return response.data;
 }
 

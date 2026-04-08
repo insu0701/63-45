@@ -5,6 +5,7 @@ from backend.app.api.deps import get_db
 from backend.app.api.response import build_response
 from backend.app.services.health_service import HealthService
 from backend.app.services.sync.kiwoom_sync_service import KiwoomSyncService
+from backend.app.services.sync.fx_sync_service import FxSyncService
 
 router = APIRouter(prefix="/api/v1/sync", tags=["sync"])
 
@@ -94,6 +95,22 @@ def run_kiwoom_sync(db: Session = Depends(get_db)):
         "warning_count": result.warning_count,
         "error_count": result.error_count,
         "archive_paths": result.archive_paths,
+    }
+
+    return build_response(data=data, snapshot_time=result.snapshot_time)
+
+@router.post("/fx")
+def run_fx_sync(db: Session = Depends(get_db)):
+    service = FxSyncService(db)
+    result = service.run()
+
+    data = {
+        "sync_run_id": result.sync_run_id,
+        "snapshot_time": result.snapshot_time.isoformat(),
+        "rates_written": result.rates_written,
+        "warning_count": result.warning_count,
+        "error_count": result.error_count,
+        "provider": result.provider,
     }
 
     return build_response(data=data, snapshot_time=result.snapshot_time)

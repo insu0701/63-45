@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { importUsHoldingsCsv, runKiwoomSync } from "../api/imports";
+import { importUsHoldingsCsv, runFxSync, runKiwoomSync } from "../api/imports";
 import { fetchSyncStatus } from "../api/sync";
 import { SummaryCard } from "../components/cards/SummaryCard";
 import { SourceStatusGrid } from "../components/cards/SourceStatusGrid";
@@ -34,6 +34,19 @@ export function SyncPage() {
     },
     onError: () => {
       setActionMessage("Kiwoom sync failed.");
+    },
+  });
+
+    const fxSyncMutation = useMutation({
+    mutationFn: runFxSync,
+    onSuccess: (result) => {
+      setActionMessage(
+        `FX sync complete. Rates written: ${result.data.rates_written}. Provider: ${result.data.provider}.`
+      );
+      queryClient.invalidateQueries({ queryKey: ["sync-status"] });
+    },
+    onError: () => {
+      setActionMessage("FX sync failed.");
     },
   });
 
@@ -109,8 +122,10 @@ export function SyncPage() {
 
       <SyncActionsPanel
         onRunKiwoomSync={() => kiwoomSyncMutation.mutate()}
+        onRunFxSync={() => fxSyncMutation.mutate()}
         onImportUsCsv={(file, usdCash) => usImportMutation.mutate({ file, usdCash })}
         isRunningKiwoomSync={kiwoomSyncMutation.isPending}
+        isRunningFxSync={fxSyncMutation.isPending}
         isImportingUsCsv={usImportMutation.isPending}
       />
 

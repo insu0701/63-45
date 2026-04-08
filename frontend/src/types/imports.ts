@@ -11,3 +11,12 @@ export type SyncActionResult = {
   imported_symbols?: string[];
   archive_paths?: Record<string, string>;
 };
+
+export type FxSyncActionResult = {
+  sync_run_id: number;
+  snapshot_time: string;
+  rates_written: number;
+  warning_count: number;
+  error_count: number;
+  provider: string;
+};

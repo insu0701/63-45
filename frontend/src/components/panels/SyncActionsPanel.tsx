@@ -2,15 +2,19 @@ import { useState } from "react";
 
 type Props = {
   onRunKiwoomSync: () => void;
+  onRunFxSync: () => void;
   onImportUsCsv: (file: File, usdCash: string) => void;
   isRunningKiwoomSync: boolean;
+  isRunningFxSync: boolean;
   isImportingUsCsv: boolean;
 };
 
 export function SyncActionsPanel({
   onRunKiwoomSync,
+  onRunFxSync,
   onImportUsCsv,
   isRunningKiwoomSync,
+  isRunningFxSync,
   isImportingUsCsv,
 }: Props) {
   const [usdCash, setUsdCash] = useState("");
@@ -20,7 +24,7 @@ export function SyncActionsPanel({
     <div
       style={{
         display: "grid",
-        gridTemplateColumns: "1fr 1fr",
+        gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
         gap: "16px",
       }}
     >
@@ -43,6 +47,28 @@ export function SyncActionsPanel({
           style={buttonStyle}
         >
           {isRunningKiwoomSync ? "Running Kiwoom Sync..." : "Run Kiwoom Sync"}
+        </button>
+      </div>
+
+      <div
+        style={{
+          border: "1px solid #e5e7eb",
+          borderRadius: "12px",
+          background: "white",
+          padding: "16px",
+        }}
+      >
+        <h3 style={{ marginTop: 0 }}>FX Refresh</h3>
+        <p style={{ color: "#6b7280", marginTop: "8px" }}>
+          Refresh KRW / USD FX snapshots from a live external source.
+        </p>
+
+        <button
+          onClick={onRunFxSync}
+          disabled={isRunningFxSync}
+          style={buttonStyle}
+        >
+          {isRunningFxSync ? "Running FX Sync..." : "Run FX Sync"}
         </button>
       </div>
 
