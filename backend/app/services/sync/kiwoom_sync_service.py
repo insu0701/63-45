@@ -12,6 +12,7 @@ from backend.app.adapters.kiwoom.account import KiwoomAccountAdapter
 from backend.app.adapters.kiwoom.archive import archive_kiwoom_payload
 from backend.app.adapters.kiwoom.normalize import (
     normalize_holdings_payload,
+    normalize_krw_cash_from_holdings_totals,
     normalize_krw_cash_payload,
 )
 from backend.app.core.config import settings
@@ -264,14 +265,30 @@ class KiwoomSyncService:
             carry_forward_holdings = self._carry_forward_non_kr_holdings(snapshot_time, sync_run.id)
             carry_forward_cash = self._carry_forward_non_krw_cash(snapshot_time, sync_run.id)
 
-            normalized_cash = normalize_krw_cash_payload(
-                cash_envelope.body,
-                fx_rate_to_base=fx_rate_to_base,
-            )
-
             totals, normalized_holdings = normalize_holdings_payload(
                 holdings_payload,
                 fx_rate_to_base=fx_rate_to_base,
+            )
+
+            normalized_cash = normalize_krw_cash_from_holdings_totals(
+                totals,
+                fx_rate_to_base=fx_rate_to_base,
+            )
+
+            if normalized_cash is None:
+                normalized_cash = normalize_krw_cash_payload(
+                    cash_envelope.body,
+                    fx_rate_to_base=fx_rate_to_base,
+                )
+                self._create_issue(
+                    sync_run_id=sync_run.id,
+                    issue_type="krw_cash_fallback_to_kt00001",
+                    severity="warning",
+                    description=(
+                        "KRW cash could not be derived from kt00018 totals "
+                        "(prsm_dpst_aset_amt - tot_evlt_amt). Fell back to kt00001 entr."
+                    ),
+                market="KR",
             )
 
             if not normalized_holdings:

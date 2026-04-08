@@ -68,6 +68,29 @@ class NormalizedHoldingRow:
     unrealized_pnl_base: Decimal | None
 
 
+def normalize_krw_cash_from_holdings_totals(
+    totals: dict[str, Decimal | None],
+    fx_rate_to_base: Decimal,
+) -> NormalizedCashRow | None:
+    prsm_dpst_aset_amt = totals.get("prsm_dpst_aset_amt")
+    tot_evlt_amt = totals.get("tot_evlt_amt")
+
+    if prsm_dpst_aset_amt is None or tot_evlt_amt is None:
+        return None
+
+    residual_cash_native = prsm_dpst_aset_amt - tot_evlt_amt
+
+    if residual_cash_native < 0:
+        residual_cash_native = Decimal("0")
+
+    return NormalizedCashRow(
+        currency="KRW",
+        amount_native=residual_cash_native,
+        fx_rate_to_base=fx_rate_to_base,
+        amount_base=quantize_money(residual_cash_native * fx_rate_to_base),
+    )
+
+
 def normalize_krw_cash_payload(
     payload: dict[str, Any],
     fx_rate_to_base: Decimal,

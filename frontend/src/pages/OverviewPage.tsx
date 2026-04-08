@@ -1,10 +1,18 @@
 import { useQuery } from "@tanstack/react-query";
 
-import { fetchConcentration, fetchOverviewSummary, fetchTopHoldings } from "../api/overview";
+import {
+  fetchConcentration,
+  fetchOverviewSummary,
+  fetchTopHoldings,
+} from "../api/overview";
 import { SummaryCard } from "../components/cards/SummaryCard";
 import { ConcentrationPanel } from "../components/panels/ConcentrationPanel";
 import { TopHoldingsTable } from "../components/tables/TopHoldingsTable";
-import { formatCurrency, formatPercent, formatTimestamp } from "../utils/format";
+import {
+  formatCurrency,
+  formatPercent,
+  formatTimestamp,
+} from "../utils/format";
 
 export function OverviewPage() {
   const overviewQuery = useQuery({
@@ -22,11 +30,22 @@ export function OverviewPage() {
     queryFn: fetchConcentration,
   });
 
-  if (overviewQuery.isLoading || topHoldingsQuery.isLoading || concentrationQuery.isLoading) {
+  const fmtOverviewMoney = (value: number | null | undefined) =>
+    formatCurrency(value, "USD", 0);
+
+  if (
+    overviewQuery.isLoading ||
+    topHoldingsQuery.isLoading ||
+    concentrationQuery.isLoading
+  ) {
     return <div>Loading dashboard...</div>;
   }
 
-  if (overviewQuery.isError || topHoldingsQuery.isError || concentrationQuery.isError) {
+  if (
+    overviewQuery.isError ||
+    topHoldingsQuery.isError ||
+    concentrationQuery.isError
+  ) {
     return (
       <div>
         <h1 style={{ marginBottom: "12px" }}>Overview</h1>
@@ -37,7 +56,7 @@ export function OverviewPage() {
     );
   }
 
-  const overview = overviewQuery.data!.data;
+  const summary = overviewQuery.data!.data;
   const topHoldings = topHoldingsQuery.data!.data;
   const concentration = concentrationQuery.data!.data;
   const snapshotTime = overviewQuery.data!.meta.snapshot_time;
@@ -60,38 +79,38 @@ export function OverviewPage() {
       >
         <SummaryCard
           label="Total NAV"
-          value={formatCurrency(overview.total_nav_base)}
+          value={fmtOverviewMoney(summary.total_nav_base)}
           subValue="Base currency: USD"
         />
         <SummaryCard
           label="Total Equity"
-          value={formatCurrency(overview.total_equity_value_base)}
+          value={fmtOverviewMoney(summary.total_equity_value_base)}
         />
         <SummaryCard
           label="Total Cash"
-          value={formatCurrency(overview.total_cash_base)}
+          value={fmtOverviewMoney(summary.total_cash_base)}
         />
         <SummaryCard
           label="Unrealized P&L"
-          value={formatCurrency(overview.total_unrealized_pnl_base)}
-          subValue={formatPercent(overview.total_unrealized_return_pct)}
+          value={fmtOverviewMoney(summary.total_unrealized_pnl_base)}
+          subValue={formatPercent(summary.total_unrealized_return_pct)}
         />
 
         <SummaryCard
           label="KR Equity Value"
-          value={formatCurrency(overview.kr_equity_value_base)}
+          value={fmtOverviewMoney(summary.kr_equity_value_base)}
         />
         <SummaryCard
           label="US Equity Value"
-          value={formatCurrency(overview.us_equity_value_base)}
+          value={fmtOverviewMoney(summary.us_equity_value_base)}
         />
         <SummaryCard
           label="KRW Cash (USD base)"
-          value={formatCurrency(overview.krw_cash_base)}
+          value={fmtOverviewMoney(summary.krw_cash_base)}
         />
         <SummaryCard
           label="USD Cash"
-          value={formatCurrency(overview.usd_cash_base)}
+          value={fmtOverviewMoney(summary.usd_cash_base)}
         />
       </div>
 
