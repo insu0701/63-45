@@ -6,6 +6,8 @@ from backend.app.db.models.fx_rate_snapshot import FxRateSnapshot
 from backend.app.db.models.sector_mapping import SectorMapping
 from backend.app.db.models.sync_run import SyncRun
 from backend.app.db.models.data_issue import DataIssue
+from backend.app.db.models.strategy_snapshot import StrategySnapshot
+from backend.app.db.models.daily_decision_log import DailyDecisionLog
 
 __all__ = [
     "Account",
@@ -16,4 +18,6 @@ __all__ = [
     "SectorMapping",
     "SyncRun",
     "DataIssue",
+    "StrategySnapshot",
+    "DailyDecisionLog",
 ]
