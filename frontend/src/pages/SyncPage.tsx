@@ -1,16 +1,59 @@
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { importUsHoldingsCsv, runKiwoomSync } from "../api/imports";
 import { fetchSyncStatus } from "../api/sync";
 import { SummaryCard } from "../components/cards/SummaryCard";
 import { SourceStatusGrid } from "../components/cards/SourceStatusGrid";
+import { SyncActionsPanel } from "../components/panels/SyncActionsPanel";
 import { DataIssuesTable } from "../components/tables/DataIssuesTable";
 import { SyncRunsTable } from "../components/tables/SyncRunsTable";
 import { formatTimestamp } from "../utils/format";
 
 export function SyncPage() {
+  const queryClient = useQueryClient();
+  const [actionMessage, setActionMessage] = useState<string>("");
+
   const query = useQuery({
     queryKey: ["sync-status"],
     queryFn: fetchSyncStatus,
+  });
+
+  const kiwoomSyncMutation = useMutation({
+    mutationFn: runKiwoomSync,
+    onSuccess: (result) => {
+      setActionMessage(
+        `Kiwoom sync complete. Holdings written: ${result.data.holdings_written}, cash rows: ${result.data.cash_rows_written}.`
+      );
+      queryClient.invalidateQueries({ queryKey: ["sync-status"] });
+      queryClient.invalidateQueries({ queryKey: ["overview"] });
+      queryClient.invalidateQueries({ queryKey: ["overview", "top-holdings"] });
+      queryClient.invalidateQueries({ queryKey: ["overview", "concentration"] });
+      queryClient.invalidateQueries({ queryKey: ["holdings"] });
+      queryClient.invalidateQueries({ queryKey: ["allocation"] });
+    },
+    onError: () => {
+      setActionMessage("Kiwoom sync failed.");
+    },
+  });
+
+  const usImportMutation = useMutation({
+    mutationFn: ({ file, usdCash }: { file: File; usdCash: string }) =>
+      importUsHoldingsCsv(file, usdCash),
+    onSuccess: (result) => {
+      setActionMessage(
+        `US import complete. Holdings written: ${result.data.holdings_written}, imported symbols: ${(result.data.imported_symbols ?? []).join(", ")}`
+      );
+      queryClient.invalidateQueries({ queryKey: ["sync-status"] });
+      queryClient.invalidateQueries({ queryKey: ["overview"] });
+      queryClient.invalidateQueries({ queryKey: ["overview", "top-holdings"] });
+      queryClient.invalidateQueries({ queryKey: ["overview", "concentration"] });
+      queryClient.invalidateQueries({ queryKey: ["holdings"] });
+      queryClient.invalidateQueries({ queryKey: ["allocation"] });
+    },
+    onError: () => {
+      setActionMessage("US CSV import failed.");
+    },
   });
 
   if (query.isLoading) {
@@ -63,6 +106,27 @@ export function SyncPage() {
           Refresh Page Data
         </button>
       </div>
+
+      <SyncActionsPanel
+        onRunKiwoomSync={() => kiwoomSyncMutation.mutate()}
+        onImportUsCsv={(file, usdCash) => usImportMutation.mutate({ file, usdCash })}
+        isRunningKiwoomSync={kiwoomSyncMutation.isPending}
+        isImportingUsCsv={usImportMutation.isPending}
+      />
+
+      {actionMessage ? (
+        <div
+          style={{
+            padding: "12px 16px",
+            borderRadius: "10px",
+            background: "#eff6ff",
+            border: "1px solid #bfdbfe",
+            color: "#1d4ed8",
+          }}
+        >
+          {actionMessage}
+        </div>
+      ) : null}
 
       <div
         style={{

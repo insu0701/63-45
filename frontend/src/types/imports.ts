@@ -1,0 +1,13 @@
+export type SyncActionResult = {
+  sync_run_id: number;
+  snapshot_time: string;
+  holdings_written: number;
+  cash_rows_written: number;
+  prices_written: number;
+  carry_forward_holdings: number;
+  carry_forward_cash: number;
+  warning_count: number;
+  error_count: number;
+  imported_symbols?: string[];
+  archive_paths?: Record<string, string>;
+};
