@@ -3,10 +3,12 @@ import { useState } from "react";
 type Props = {
   onRunFullSync: () => void;
   onRunKiwoomSync: () => void;
+  onRunPriceSync: () => void;
   onRunFxSync: () => void;
   onImportUsCsv: (file: File, usdCash: string) => void;
   isRunningFullSync: boolean;
   isRunningKiwoomSync: boolean;
+  isRunningPriceSync: boolean;
   isRunningFxSync: boolean;
   isImportingUsCsv: boolean;
 };
@@ -14,10 +16,12 @@ type Props = {
 export function SyncActionsPanel({
   onRunFullSync,
   onRunKiwoomSync,
+  onRunPriceSync,
   onRunFxSync,
   onImportUsCsv,
   isRunningFullSync,
   isRunningKiwoomSync,
+  isRunningPriceSync,
   isRunningFxSync,
   isImportingUsCsv,
 }: Props) {
@@ -28,7 +32,7 @@ export function SyncActionsPanel({
     <div
       style={{
         display: "grid",
-        gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+        gridTemplateColumns: "repeat(5, minmax(0, 1fr))",
         gap: "16px",
       }}
     >
@@ -42,14 +46,10 @@ export function SyncActionsPanel({
       >
         <h3 style={{ marginTop: 0 }}>Full Refresh</h3>
         <p style={{ color: "#6b7280", marginTop: "8px" }}>
-          Refresh FX first, then run Kiwoom KR sync using the latest FX snapshot.
+          Refresh FX, run Kiwoom KR sync, then refresh prices for current holdings.
         </p>
 
-        <button
-          onClick={onRunFullSync}
-          disabled={isRunningFullSync}
-          style={buttonStyle}
-        >
+        <button onClick={onRunFullSync} disabled={isRunningFullSync} style={buttonStyle}>
           {isRunningFullSync ? "Running Full Refresh..." : "Run Full Refresh"}
         </button>
       </div>
@@ -67,12 +67,26 @@ export function SyncActionsPanel({
           Pull latest KR holdings and KRW cash from Kiwoom.
         </p>
 
-        <button
-          onClick={onRunKiwoomSync}
-          disabled={isRunningKiwoomSync}
-          style={buttonStyle}
-        >
+        <button onClick={onRunKiwoomSync} disabled={isRunningKiwoomSync} style={buttonStyle}>
           {isRunningKiwoomSync ? "Running Kiwoom Sync..." : "Run Kiwoom Sync"}
+        </button>
+      </div>
+
+      <div
+        style={{
+          border: "1px solid #e5e7eb",
+          borderRadius: "12px",
+          background: "white",
+          padding: "16px",
+        }}
+      >
+        <h3 style={{ marginTop: 0 }}>Price Refresh</h3>
+        <p style={{ color: "#6b7280", marginTop: "8px" }}>
+          Reprice current holdings and write a new active holdings snapshot.
+        </p>
+
+        <button onClick={onRunPriceSync} disabled={isRunningPriceSync} style={buttonStyle}>
+          {isRunningPriceSync ? "Running Price Refresh..." : "Run Price Refresh"}
         </button>
       </div>
 
@@ -89,11 +103,7 @@ export function SyncActionsPanel({
           Refresh KRW / USD FX snapshots from a live external source.
         </p>
 
-        <button
-          onClick={onRunFxSync}
-          disabled={isRunningFxSync}
-          style={buttonStyle}
-        >
+        <button onClick={onRunFxSync} disabled={isRunningFxSync} style={buttonStyle}>
           {isRunningFxSync ? "Running FX Sync..." : "Run FX Sync"}
         </button>
       </div>

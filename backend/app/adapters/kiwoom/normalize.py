@@ -21,6 +21,13 @@ def parse_decimal(value: Any) -> Decimal | None:
         return Decimal(text)
     except InvalidOperation:
         return None
+    
+
+def parse_price_abs(value: Any) -> Decimal | None:
+    raw = parse_decimal(value)
+    if raw is None:
+        return None
+    return abs(raw)
 
 
 def parse_percent_as_fraction(value: Any) -> Decimal | None:
@@ -145,8 +152,8 @@ def normalize_holdings_payload(
                 symbol=normalize_kr_stock_code(item.get("stk_cd", "")),
                 security_name=str(item.get("stk_nm", "")).strip(),
                 quantity=parse_decimal(item.get("rmnd_qty")) or Decimal("0"),
-                avg_cost_native=parse_decimal(item.get("pur_pric")),
-                current_price_native=parse_decimal(item.get("cur_prc")),
+                avg_cost_native=parse_price_abs(item.get("pur_pric")),
+                current_price_native=parse_price_abs(item.get("cur_prc")),
                 cost_basis_native=cost_basis_native,
                 market_value_native=market_value_native,
                 unrealized_pnl_native=unrealized_pnl_native,

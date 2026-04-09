@@ -1,7 +1,13 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { importUsHoldingsCsv, runFullSync, runFxSync, runKiwoomSync } from "../api/imports";
+import {
+  importUsHoldingsCsv,
+  runFullSync,
+  runFxSync,
+  runKiwoomSync,
+  runPriceSync,
+} from "../api/imports";
 import { fetchSyncStatus } from "../api/sync";
 import { SummaryCard } from "../components/cards/SummaryCard";
 import { SourceStatusGrid } from "../components/cards/SourceStatusGrid";
@@ -10,9 +16,21 @@ import { DataIssuesTable } from "../components/tables/DataIssuesTable";
 import { SyncRunsTable } from "../components/tables/SyncRunsTable";
 import { formatTimestamp } from "../utils/format";
 
+function invalidatePortfolioQueries(queryClient: ReturnType<typeof useQueryClient>) {
+  queryClient.invalidateQueries({ queryKey: ["sync-status"] });
+  queryClient.invalidateQueries({ queryKey: ["overview"] });
+  queryClient.invalidateQueries({ queryKey: ["overview", "top-holdings"] });
+  queryClient.invalidateQueries({ queryKey: ["overview", "concentration"] });
+  queryClient.invalidateQueries({ queryKey: ["holdings"] });
+  queryClient.invalidateQueries({ queryKey: ["allocation"] });
+  queryClient.invalidateQueries({ queryKey: ["strategy-overlay"] });
+  queryClient.invalidateQueries({ queryKey: ["strategy-review"] });
+  queryClient.invalidateQueries({ queryKey: ["strategy-decision-log"] });
+}
+
 export function SyncPage() {
   const queryClient = useQueryClient();
-  const [actionMessage, setActionMessage] = useState<string>("");
+  const [actionMessage, setActionMessage] = useState("");
 
   const query = useQuery({
     queryKey: ["sync-status"],
@@ -23,16 +41,9 @@ export function SyncPage() {
     mutationFn: runFullSync,
     onSuccess: (result) => {
       setActionMessage(
-        `Full refresh complete. FX rates written: ${result.data.fx_rates_written}, holdings written: ${result.data.holdings_written}, cash rows: ${result.data.cash_rows_written}.`
+        `Full refresh complete. FX rates: ${result.data.fx_rates_written}, Kiwoom holdings: ${result.data.holdings_written}, repriced holdings: ${result.data.price_refresh_holdings_written}, price rows: ${result.data.price_refresh_prices_written}.`
       );
-      queryClient.invalidateQueries({ queryKey: ["sync-status"] });
-      queryClient.invalidateQueries({ queryKey: ["overview"] });
-      queryClient.invalidateQueries({ queryKey: ["overview", "top-holdings"] });
-      queryClient.invalidateQueries({ queryKey: ["overview", "concentration"] });
-      queryClient.invalidateQueries({ queryKey: ["holdings"] });
-      queryClient.invalidateQueries({ queryKey: ["allocation"] });
-      queryClient.invalidateQueries({ queryKey: ["strategy-overlay"] });
-      queryClient.invalidateQueries({ queryKey: ["strategy-decision-log"] });
+      invalidatePortfolioQueries(queryClient);
     },
     onError: () => {
       setActionMessage("Full refresh failed.");
@@ -45,19 +56,27 @@ export function SyncPage() {
       setActionMessage(
         `Kiwoom sync complete. Holdings written: ${result.data.holdings_written}, cash rows: ${result.data.cash_rows_written}.`
       );
-      queryClient.invalidateQueries({ queryKey: ["sync-status"] });
-      queryClient.invalidateQueries({ queryKey: ["overview"] });
-      queryClient.invalidateQueries({ queryKey: ["overview", "top-holdings"] });
-      queryClient.invalidateQueries({ queryKey: ["overview", "concentration"] });
-      queryClient.invalidateQueries({ queryKey: ["holdings"] });
-      queryClient.invalidateQueries({ queryKey: ["allocation"] });
+      invalidatePortfolioQueries(queryClient);
     },
     onError: () => {
       setActionMessage("Kiwoom sync failed.");
     },
   });
 
-    const fxSyncMutation = useMutation({
+  const priceSyncMutation = useMutation({
+    mutationFn: runPriceSync,
+    onSuccess: (result) => {
+      setActionMessage(
+        `Price refresh complete. Repriced holdings: ${result.data.holdings_written}, price rows: ${result.data.prices_written}, carry-forward symbols: ${result.data.carry_forward_symbols}.`
+      );
+      invalidatePortfolioQueries(queryClient);
+    },
+    onError: () => {
+      setActionMessage("Price refresh failed.");
+    },
+  });
+
+  const fxSyncMutation = useMutation({
     mutationFn: runFxSync,
     onSuccess: (result) => {
       setActionMessage(
@@ -77,12 +96,7 @@ export function SyncPage() {
       setActionMessage(
         `US import complete. Holdings written: ${result.data.holdings_written}, imported symbols: ${(result.data.imported_symbols ?? []).join(", ")}`
       );
-      queryClient.invalidateQueries({ queryKey: ["sync-status"] });
-      queryClient.invalidateQueries({ queryKey: ["overview"] });
-      queryClient.invalidateQueries({ queryKey: ["overview", "top-holdings"] });
-      queryClient.invalidateQueries({ queryKey: ["overview", "concentration"] });
-      queryClient.invalidateQueries({ queryKey: ["holdings"] });
-      queryClient.invalidateQueries({ queryKey: ["allocation"] });
+      invalidatePortfolioQueries(queryClient);
     },
     onError: () => {
       setActionMessage("US CSV import failed.");
@@ -109,21 +123,27 @@ export function SyncPage() {
 
   return (
     <div style={{ display: "grid", gap: "24px" }}>
+      <div>
+        <h1 style={{ fontSize: "28px", margin: 0 }}>Sync / Health</h1>
+        <p style={{ color: "#6b7280", marginTop: "8px" }}>
+          Snapshot time: {formatTimestamp(snapshotTime)}
+        </p>
+      </div>
+
       <div
         style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "end",
+          display: "grid",
+          gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
           gap: "16px",
         }}
       >
-        <div>
-          <h1 style={{ fontSize: "28px", margin: 0 }}>Sync / Health</h1>
-          <p style={{ color: "#6b7280", marginTop: "8px" }}>
-            Snapshot time: {formatTimestamp(snapshotTime)}
-          </p>
-        </div>
+        <SummaryCard label="Fresh Sources" value={String(payload.summary.fresh_source_count)} />
+        <SummaryCard label="Stale Sources" value={String(payload.summary.stale_source_count)} />
+        <SummaryCard label="Missing Sources" value={String(payload.summary.missing_source_count)} />
+        <SummaryCard label="Open Issues" value={String(payload.summary.open_issue_count)} />
+      </div>
 
+      <div>
         <button
           onClick={() => query.refetch()}
           style={{
@@ -143,10 +163,12 @@ export function SyncPage() {
       <SyncActionsPanel
         onRunFullSync={() => fullSyncMutation.mutate()}
         onRunKiwoomSync={() => kiwoomSyncMutation.mutate()}
+        onRunPriceSync={() => priceSyncMutation.mutate()}
         onRunFxSync={() => fxSyncMutation.mutate()}
         onImportUsCsv={(file, usdCash) => usImportMutation.mutate({ file, usdCash })}
         isRunningFullSync={fullSyncMutation.isPending}
         isRunningKiwoomSync={kiwoomSyncMutation.isPending}
+        isRunningPriceSync={priceSyncMutation.isPending}
         isRunningFxSync={fxSyncMutation.isPending}
         isImportingUsCsv={usImportMutation.isPending}
       />
@@ -165,38 +187,9 @@ export function SyncPage() {
         </div>
       ) : null}
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
-          gap: "16px",
-        }}
-      >
-        <SummaryCard
-          label="Fresh Sources"
-          value={String(payload.summary.fresh_source_count)}
-        />
-        <SummaryCard
-          label="Stale Sources"
-          value={String(payload.summary.stale_source_count)}
-        />
-        <SummaryCard
-          label="Missing Sources"
-          value={String(payload.summary.missing_source_count)}
-        />
-        <SummaryCard
-          label="Open Issues"
-          value={String(payload.summary.open_issue_count)}
-          subValue={`Errors: ${payload.summary.open_error_count} · Warnings: ${payload.summary.open_warning_count}`}
-        />
-      </div>
-
       <SourceStatusGrid rows={payload.sources} />
-
-      <div style={{ display: "grid", gap: "16px" }}>
-        <SyncRunsTable rows={payload.sync_runs} />
-        <DataIssuesTable rows={payload.data_issues} />
-      </div>
+      <SyncRunsTable rows={payload.sync_runs} />
+      <DataIssuesTable rows={payload.data_issues} />
     </div>
   );
 }

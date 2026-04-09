@@ -4,9 +4,10 @@ from sqlalchemy.orm import Session
 from backend.app.api.deps import get_db
 from backend.app.api.response import build_response
 from backend.app.services.health_service import HealthService
-from backend.app.services.sync.kiwoom_sync_service import KiwoomSyncService
-from backend.app.services.sync.fx_sync_service import FxSyncService
 from backend.app.services.sync.full_sync_service import FullSyncService
+from backend.app.services.sync.fx_sync_service import FxSyncService
+from backend.app.services.sync.kiwoom_sync_service import KiwoomSyncService
+from backend.app.services.sync.price_sync_service import PriceSyncService
 
 router = APIRouter(prefix="/api/v1/sync", tags=["sync"])
 
@@ -80,6 +81,7 @@ def get_sync_status(
 
     return build_response(data=data, snapshot_time=snapshot_time)
 
+
 @router.post("/kiwoom")
 def run_kiwoom_sync(db: Session = Depends(get_db)):
     service = KiwoomSyncService(db)
@@ -100,6 +102,27 @@ def run_kiwoom_sync(db: Session = Depends(get_db)):
 
     return build_response(data=data, snapshot_time=result.snapshot_time)
 
+
+@router.post("/prices")
+def run_price_sync(db: Session = Depends(get_db)):
+    service = PriceSyncService(db)
+    result = service.run()
+
+    data = {
+        "sync_run_id": result.sync_run_id,
+        "snapshot_time": result.snapshot_time.isoformat(),
+        "holdings_written": result.holdings_written,
+        "prices_written": result.prices_written,
+        "kr_symbols_priced": result.kr_symbols_priced,
+        "us_symbols_priced": result.us_symbols_priced,
+        "carry_forward_symbols": result.carry_forward_symbols,
+        "warning_count": result.warning_count,
+        "error_count": result.error_count,
+    }
+
+    return build_response(data=data, snapshot_time=result.snapshot_time)
+
+
 @router.post("/fx")
 def run_fx_sync(db: Session = Depends(get_db)):
     service = FxSyncService(db)
@@ -116,6 +139,7 @@ def run_fx_sync(db: Session = Depends(get_db)):
 
     return build_response(data=data, snapshot_time=result.snapshot_time)
 
+
 @router.post("/full")
 def run_full_sync(db: Session = Depends(get_db)):
     service = FullSyncService(db)
@@ -126,12 +150,16 @@ def run_full_sync(db: Session = Depends(get_db)):
         "finished_at": result.finished_at.isoformat(),
         "fx_sync_run_id": result.fx_sync_run_id,
         "kiwoom_sync_run_id": result.kiwoom_sync_run_id,
+        "price_sync_run_id": result.price_sync_run_id,
         "fx_rates_written": result.fx_rates_written,
         "holdings_written": result.holdings_written,
         "cash_rows_written": result.cash_rows_written,
         "prices_written": result.prices_written,
         "carry_forward_holdings": result.carry_forward_holdings,
         "carry_forward_cash": result.carry_forward_cash,
+        "price_refresh_holdings_written": result.price_refresh_holdings_written,
+        "price_refresh_prices_written": result.price_refresh_prices_written,
+        "price_carry_forward_symbols": result.price_carry_forward_symbols,
         "warning_count": result.warning_count,
         "error_count": result.error_count,
     }

@@ -3,11 +3,17 @@ import type { ApiResponse } from "../types/api";
 import type {
   FullSyncActionResult,
   FxSyncActionResult,
+  PriceSyncActionResult,
   SyncActionResult,
 } from "../types/imports";
 
 export async function runKiwoomSync(): Promise<ApiResponse<SyncActionResult>> {
   const response = await apiClient.post<ApiResponse<SyncActionResult>>("/api/v1/sync/kiwoom");
+  return response.data;
+}
+
+export async function runPriceSync(): Promise<ApiResponse<PriceSyncActionResult>> {
+  const response = await apiClient.post<ApiResponse<PriceSyncActionResult>>("/api/v1/sync/prices");
   return response.data;
 }
 
