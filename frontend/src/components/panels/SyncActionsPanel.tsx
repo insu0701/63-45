@@ -1,18 +1,22 @@
 import { useState } from "react";
 
 type Props = {
+  onRunFullSync: () => void;
   onRunKiwoomSync: () => void;
   onRunFxSync: () => void;
   onImportUsCsv: (file: File, usdCash: string) => void;
+  isRunningFullSync: boolean;
   isRunningKiwoomSync: boolean;
   isRunningFxSync: boolean;
   isImportingUsCsv: boolean;
 };
 
 export function SyncActionsPanel({
+  onRunFullSync,
   onRunKiwoomSync,
   onRunFxSync,
   onImportUsCsv,
+  isRunningFullSync,
   isRunningKiwoomSync,
   isRunningFxSync,
   isImportingUsCsv,
@@ -24,10 +28,32 @@ export function SyncActionsPanel({
     <div
       style={{
         display: "grid",
-        gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+        gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
         gap: "16px",
       }}
     >
+      <div
+        style={{
+          border: "1px solid #e5e7eb",
+          borderRadius: "12px",
+          background: "white",
+          padding: "16px",
+        }}
+      >
+        <h3 style={{ marginTop: 0 }}>Full Refresh</h3>
+        <p style={{ color: "#6b7280", marginTop: "8px" }}>
+          Refresh FX first, then run Kiwoom KR sync using the latest FX snapshot.
+        </p>
+
+        <button
+          onClick={onRunFullSync}
+          disabled={isRunningFullSync}
+          style={buttonStyle}
+        >
+          {isRunningFullSync ? "Running Full Refresh..." : "Run Full Refresh"}
+        </button>
+      </div>
+
       <div
         style={{
           border: "1px solid #e5e7eb",

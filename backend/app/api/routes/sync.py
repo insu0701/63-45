@@ -6,6 +6,7 @@ from backend.app.api.response import build_response
 from backend.app.services.health_service import HealthService
 from backend.app.services.sync.kiwoom_sync_service import KiwoomSyncService
 from backend.app.services.sync.fx_sync_service import FxSyncService
+from backend.app.services.sync.full_sync_service import FullSyncService
 
 router = APIRouter(prefix="/api/v1/sync", tags=["sync"])
 
@@ -111,6 +112,28 @@ def run_fx_sync(db: Session = Depends(get_db)):
         "warning_count": result.warning_count,
         "error_count": result.error_count,
         "provider": result.provider,
+    }
+
+    return build_response(data=data, snapshot_time=result.snapshot_time)
+
+@router.post("/full")
+def run_full_sync(db: Session = Depends(get_db)):
+    service = FullSyncService(db)
+    result = service.run()
+
+    data = {
+        "started_at": result.started_at.isoformat(),
+        "finished_at": result.finished_at.isoformat(),
+        "fx_sync_run_id": result.fx_sync_run_id,
+        "kiwoom_sync_run_id": result.kiwoom_sync_run_id,
+        "fx_rates_written": result.fx_rates_written,
+        "holdings_written": result.holdings_written,
+        "cash_rows_written": result.cash_rows_written,
+        "prices_written": result.prices_written,
+        "carry_forward_holdings": result.carry_forward_holdings,
+        "carry_forward_cash": result.carry_forward_cash,
+        "warning_count": result.warning_count,
+        "error_count": result.error_count,
     }
 
     return build_response(data=data, snapshot_time=result.snapshot_time)

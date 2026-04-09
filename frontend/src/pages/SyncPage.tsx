@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { importUsHoldingsCsv, runFxSync, runKiwoomSync } from "../api/imports";
+import { importUsHoldingsCsv, runFullSync, runFxSync, runKiwoomSync } from "../api/imports";
 import { fetchSyncStatus } from "../api/sync";
 import { SummaryCard } from "../components/cards/SummaryCard";
 import { SourceStatusGrid } from "../components/cards/SourceStatusGrid";
@@ -17,6 +17,26 @@ export function SyncPage() {
   const query = useQuery({
     queryKey: ["sync-status"],
     queryFn: fetchSyncStatus,
+  });
+
+  const fullSyncMutation = useMutation({
+    mutationFn: runFullSync,
+    onSuccess: (result) => {
+      setActionMessage(
+        `Full refresh complete. FX rates written: ${result.data.fx_rates_written}, holdings written: ${result.data.holdings_written}, cash rows: ${result.data.cash_rows_written}.`
+      );
+      queryClient.invalidateQueries({ queryKey: ["sync-status"] });
+      queryClient.invalidateQueries({ queryKey: ["overview"] });
+      queryClient.invalidateQueries({ queryKey: ["overview", "top-holdings"] });
+      queryClient.invalidateQueries({ queryKey: ["overview", "concentration"] });
+      queryClient.invalidateQueries({ queryKey: ["holdings"] });
+      queryClient.invalidateQueries({ queryKey: ["allocation"] });
+      queryClient.invalidateQueries({ queryKey: ["strategy-overlay"] });
+      queryClient.invalidateQueries({ queryKey: ["strategy-decision-log"] });
+    },
+    onError: () => {
+      setActionMessage("Full refresh failed.");
+    },
   });
 
   const kiwoomSyncMutation = useMutation({
@@ -121,9 +141,11 @@ export function SyncPage() {
       </div>
 
       <SyncActionsPanel
+        onRunFullSync={() => fullSyncMutation.mutate()}
         onRunKiwoomSync={() => kiwoomSyncMutation.mutate()}
         onRunFxSync={() => fxSyncMutation.mutate()}
         onImportUsCsv={(file, usdCash) => usImportMutation.mutate({ file, usdCash })}
+        isRunningFullSync={fullSyncMutation.isPending}
         isRunningKiwoomSync={kiwoomSyncMutation.isPending}
         isRunningFxSync={fxSyncMutation.isPending}
         isImportingUsCsv={usImportMutation.isPending}
