@@ -1,6 +1,12 @@
 import { apiClient } from "./client";
 import type { ApiResponse } from "../types/api";
-import type { DailyDecisionLogItem, StrategyOverlayItem } from "../types/strategy";
+import type {
+  DailyDecisionLogItem,
+  ManualStrategyOverlayUpsertRequest,
+  ManualStrategyOverlayUpsertResult,
+  StrategyOptionsPayload,
+  StrategyOverlayItem,
+} from "../types/strategy";
 
 export async function fetchStrategyOverlay(sleeve?: string) {
   const params = sleeve ? { sleeve } : {};
@@ -16,6 +22,23 @@ export async function fetchDecisionLog(limit = 50, sleeve?: string) {
   const response = await apiClient.get<ApiResponse<DailyDecisionLogItem[]>>(
     "/api/v1/strategy/decision-log",
     { params }
+  );
+  return response.data;
+}
+
+export async function fetchStrategyOptions() {
+  const response = await apiClient.get<ApiResponse<StrategyOptionsPayload>>(
+    "/api/v1/strategy/options"
+  );
+  return response.data;
+}
+
+export async function saveManualStrategyOverlay(
+  payload: ManualStrategyOverlayUpsertRequest
+) {
+  const response = await apiClient.post<ApiResponse<ManualStrategyOverlayUpsertResult>>(
+    "/api/v1/strategy/overlay/manual",
+    payload
   );
   return response.data;
 }

@@ -45,3 +45,43 @@ class StrategyOverlaySummary(BaseModel):
     decision_log_row_count: int
     rows_with_target: int
     rows_with_delta: int
+
+
+class ReasonCodeOption(BaseModel):
+    code: str
+    label: str
+    description: str
+
+
+class StrategyOptionsPayload(BaseModel):
+    strategy_state_options: list[str]
+    target_state_options: list[str]
+    eligibility_status_options: list[str]
+    buy_list_status_options: list[str]
+    reason_codes: list[ReasonCodeOption]
+
+
+class ManualStrategyOverlayUpsertRequest(BaseModel):
+    symbol: str
+    sleeve: str
+    strategy_state: str | None = None
+    target_state: str | None = None
+    target_weight: float | None = None
+    target_dollars: float | None = None
+    eligibility_status: str | None = None
+    buy_list_status: str | None = None
+    reason_code: str
+    notes: str | None = None
+    append_decision_log: bool = True
+
+
+class ManualStrategyOverlayUpsertResult(BaseModel):
+    overlay_id: int
+    symbol: str
+    sleeve: str
+    as_of_date: str
+    reason_code: str
+    actual_position_dollars: float
+    target_dollars: float | None
+    actual_vs_target_delta: float | None
+    decision_log_written: bool

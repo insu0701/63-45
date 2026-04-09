@@ -5,6 +5,15 @@ from sqlalchemy.orm import Session
 
 from backend.app.api.deps import get_db
 from backend.app.api.response import build_response
+from backend.app.core.strategy_options import (
+    BUY_LIST_STATUS_OPTIONS,
+    ELIGIBILITY_STATUS_OPTIONS,
+    REASON_CODE_OPTIONS,
+    STRATEGY_STATE_OPTIONS,
+    TARGET_STATE_OPTIONS,
+)
+from backend.app.schemas.strategy import ManualStrategyOverlayUpsertRequest
+from backend.app.services.manual_strategy_service import ManualStrategyService
 from backend.app.services.strategy_overlay_service import StrategyOverlayService
 
 router = APIRouter(prefix="/api/v1/strategy", tags=["strategy"])
@@ -14,6 +23,18 @@ def _to_float(value: Decimal | None) -> float | None:
     if value is None:
         return None
     return float(value)
+
+
+@router.get("/options")
+def get_strategy_options():
+    data = {
+        "strategy_state_options": STRATEGY_STATE_OPTIONS,
+        "target_state_options": TARGET_STATE_OPTIONS,
+        "eligibility_status_options": ELIGIBILITY_STATUS_OPTIONS,
+        "buy_list_status_options": BUY_LIST_STATUS_OPTIONS,
+        "reason_codes": REASON_CODE_OPTIONS,
+    }
+    return build_response(data=data, snapshot_time=None)
 
 
 @router.get("/overlay")
@@ -46,6 +67,41 @@ def get_strategy_overlay(
         }
         for row in rows
     ]
+
+    return build_response(data=data, snapshot_time=None)
+
+
+@router.post("/overlay/manual")
+def upsert_manual_strategy_overlay(
+    payload: ManualStrategyOverlayUpsertRequest,
+    db: Session = Depends(get_db),
+):
+    service = ManualStrategyService(db)
+    result = service.upsert_overlay(
+        symbol=payload.symbol,
+        sleeve=payload.sleeve,
+        strategy_state=payload.strategy_state,
+        target_state=payload.target_state,
+        target_weight=payload.target_weight,
+        target_dollars=payload.target_dollars,
+        eligibility_status=payload.eligibility_status,
+        buy_list_status=payload.buy_list_status,
+        reason_code=payload.reason_code,
+        notes=payload.notes,
+        append_decision_log=payload.append_decision_log,
+    )
+
+    data = {
+        "overlay_id": result.overlay_id,
+        "symbol": result.symbol,
+        "sleeve": result.sleeve,
+        "as_of_date": result.as_of_date.isoformat(),
+        "reason_code": result.reason_code,
+        "actual_position_dollars": float(result.actual_position_dollars),
+        "target_dollars": _to_float(result.target_dollars),
+        "actual_vs_target_delta": _to_float(result.actual_vs_target_delta),
+        "decision_log_written": result.decision_log_written,
+    }
 
     return build_response(data=data, snapshot_time=None)
 

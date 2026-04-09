@@ -3,9 +3,11 @@ import { formatCurrency, formatPercent } from "../../utils/format";
 
 type Props = {
   rows: StrategyOverlayItem[];
+  selectedKey: string | null;
+  onSelect: (row: StrategyOverlayItem) => void;
 };
 
-export function StrategyOverlayTable({ rows }: Props) {
+export function StrategyOverlayTable({ rows, selectedKey, onSelect }: Props) {
   return (
     <div
       style={{
@@ -40,27 +42,39 @@ export function StrategyOverlayTable({ rows }: Props) {
               </tr>
             </thead>
             <tbody>
-              {rows.map((row) => (
-                <tr key={`${row.symbol}-${row.market}`}>
-                  <td style={tdStyle}>{row.symbol}</td>
-                  <td style={tdStyle}>{row.sleeve}</td>
-                  <td style={tdStyle}>{formatCurrency(row.current_market_value_base, "USD", 0)}</td>
-                  <td style={tdStyle}>{formatPercent(row.current_weight_of_nav, 2)}</td>
-                  <td style={tdStyle}>{row.strategy_state ?? "—"}</td>
-                  <td style={tdStyle}>{row.target_state ?? "—"}</td>
-                  <td style={tdStyle}>
-                    {row.target_dollars == null ? "—" : formatCurrency(row.target_dollars, "USD", 0)}
-                  </td>
-                  <td style={tdStyle}>
-                    {row.actual_vs_target_delta == null
-                      ? "—"
-                      : formatCurrency(row.actual_vs_target_delta, "USD", 0)}
-                  </td>
-                  <td style={tdStyle}>{row.eligibility_status ?? "—"}</td>
-                  <td style={tdStyle}>{row.buy_list_status ?? "—"}</td>
-                  <td style={tdStyle}>{row.reason_code ?? "—"}</td>
-                </tr>
-              ))}
+              {rows.map((row) => {
+                const rowKey = `${row.symbol}::${row.sleeve}`;
+                const isSelected = rowKey === selectedKey;
+
+                return (
+                  <tr
+                    key={rowKey}
+                    onClick={() => onSelect(row)}
+                    style={{
+                      background: isSelected ? "#eff6ff" : "white",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <td style={tdStyle}>{row.symbol}</td>
+                    <td style={tdStyle}>{row.sleeve}</td>
+                    <td style={tdStyle}>{formatCurrency(row.current_market_value_base, "USD", 0)}</td>
+                    <td style={tdStyle}>{formatPercent(row.current_weight_of_nav, 2)}</td>
+                    <td style={tdStyle}>{row.strategy_state ?? "—"}</td>
+                    <td style={tdStyle}>{row.target_state ?? "—"}</td>
+                    <td style={tdStyle}>
+                      {row.target_dollars == null ? "—" : formatCurrency(row.target_dollars, "USD", 0)}
+                    </td>
+                    <td style={tdStyle}>
+                      {row.actual_vs_target_delta == null
+                        ? "—"
+                        : formatCurrency(row.actual_vs_target_delta, "USD", 0)}
+                    </td>
+                    <td style={tdStyle}>{row.eligibility_status ?? "—"}</td>
+                    <td style={tdStyle}>{row.buy_list_status ?? "—"}</td>
+                    <td style={tdStyle}>{row.reason_code ?? "—"}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
