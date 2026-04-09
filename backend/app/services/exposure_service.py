@@ -21,6 +21,10 @@ class SleeveExposure:
     position_count: int
     unrealized_pnl_base: Decimal
 
+    @property
+    def market_value_base(self) -> Decimal:
+        return self.equity_value_base
+
 
 @dataclass
 class CountryExposure:

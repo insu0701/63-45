@@ -33,7 +33,7 @@ def get_holdings(
     sleeve_exposures = exposure.get_sleeve_exposures()
 
     total_nav = summary.total_nav_base
-    sleeve_nav_map = {row.sleeve: row.market_value_base for row in sleeve_exposures}
+    sleeve_nav_map = {row.sleeve: row.equity_value_base for row in sleeve_exposures}
 
     items = []
     for row in holdings:

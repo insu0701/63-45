@@ -34,8 +34,8 @@ def get_overview(db: Session = Depends(get_db)):
         "total_nav_base": _to_float(summary.total_nav_base),
         "total_unrealized_pnl_base": _to_float(summary.total_unrealized_pnl_base),
         "total_unrealized_return_pct": _to_float(summary.total_unrealized_return_pct),
-        "kr_equity_value_base": _to_float(sleeve_map.get("KR").market_value_base if sleeve_map.get("KR") else 0),
-        "us_equity_value_base": _to_float(sleeve_map.get("US").market_value_base if sleeve_map.get("US") else 0),
+        "kr_equity_value_base": _to_float(sleeve_map.get("KR").equity_value_base if sleeve_map.get("KR") else 0),
+        "us_equity_value_base": _to_float(sleeve_map.get("US").equity_value_base if sleeve_map.get("US") else 0),
         "krw_cash_base": _to_float(cash_map.get("KRW").amount_base if cash_map.get("KRW") else 0),
         "usd_cash_base": _to_float(cash_map.get("USD").amount_base if cash_map.get("USD") else 0),
     }
