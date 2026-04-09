@@ -85,3 +85,39 @@ class ManualStrategyOverlayUpsertResult(BaseModel):
     target_dollars: float | None
     actual_vs_target_delta: float | None
     decision_log_written: bool
+
+
+class RebalanceCandidateItem(BaseModel):
+    symbol: str
+    security_name: str
+    sleeve: str
+    market: str
+    country: str
+    current_market_value_base: float
+    target_dollars: float
+    actual_vs_target_delta: float
+    abs_delta_dollars: float
+    current_weight_of_nav: float
+    target_weight: float | None
+    strategy_state: str | None
+    target_state: str | None
+    reason_code: str | None
+    suggested_action: str
+
+
+class StrategyReviewMetrics(BaseModel):
+    overlay_row_count: int
+    rows_with_target: int
+    rows_without_target: int
+    rows_with_delta: int
+    on_target_count: int
+    add_count: int
+    trim_count: int
+    exit_count: int
+    gross_abs_delta_dollars: float
+    net_delta_dollars: float
+
+
+class StrategyReviewPayload(BaseModel):
+    metrics: StrategyReviewMetrics
+    candidates: list[RebalanceCandidateItem]

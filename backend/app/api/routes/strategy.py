@@ -71,6 +71,58 @@ def get_strategy_overlay(
     return build_response(data=data, snapshot_time=None)
 
 
+@router.get("/review")
+def get_strategy_review(
+    sleeve: str | None = Query(default=None),
+    min_abs_delta: float = Query(default=1000, ge=0),
+    limit: int = Query(default=25, ge=1, le=200),
+    db: Session = Depends(get_db),
+):
+    service = StrategyOverlayService(db)
+    metrics, candidates = service.get_review_metrics_and_candidates(
+        sleeve=sleeve,
+        min_abs_delta=Decimal(str(min_abs_delta)),
+        limit=limit,
+    )
+
+    data = {
+        "metrics": {
+            "overlay_row_count": metrics.overlay_row_count,
+            "rows_with_target": metrics.rows_with_target,
+            "rows_without_target": metrics.rows_without_target,
+            "rows_with_delta": metrics.rows_with_delta,
+            "on_target_count": metrics.on_target_count,
+            "add_count": metrics.add_count,
+            "trim_count": metrics.trim_count,
+            "exit_count": metrics.exit_count,
+            "gross_abs_delta_dollars": float(metrics.gross_abs_delta_dollars),
+            "net_delta_dollars": float(metrics.net_delta_dollars),
+        },
+        "candidates": [
+            {
+                "symbol": row.symbol,
+                "security_name": row.security_name,
+                "sleeve": row.sleeve,
+                "market": row.market,
+                "country": row.country,
+                "current_market_value_base": float(row.current_market_value_base),
+                "target_dollars": float(row.target_dollars),
+                "actual_vs_target_delta": float(row.actual_vs_target_delta),
+                "abs_delta_dollars": float(row.abs_delta_dollars),
+                "current_weight_of_nav": float(row.current_weight_of_nav),
+                "target_weight": _to_float(row.target_weight),
+                "strategy_state": row.strategy_state,
+                "target_state": row.target_state,
+                "reason_code": row.reason_code,
+                "suggested_action": row.suggested_action,
+            }
+            for row in candidates
+        ],
+    }
+
+    return build_response(data=data, snapshot_time=None)
+
+
 @router.post("/overlay/manual")
 def upsert_manual_strategy_overlay(
     payload: ManualStrategyOverlayUpsertRequest,

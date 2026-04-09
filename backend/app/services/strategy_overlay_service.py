@@ -32,6 +32,39 @@ class OverlayRow:
     as_of_date: date | None
 
 
+@dataclass
+class ReviewMetrics:
+    overlay_row_count: int
+    rows_with_target: int
+    rows_without_target: int
+    rows_with_delta: int
+    on_target_count: int
+    add_count: int
+    trim_count: int
+    exit_count: int
+    gross_abs_delta_dollars: Decimal
+    net_delta_dollars: Decimal
+
+
+@dataclass
+class RebalanceCandidate:
+    symbol: str
+    security_name: str
+    sleeve: str
+    market: str
+    country: str
+    current_market_value_base: Decimal
+    target_dollars: Decimal
+    actual_vs_target_delta: Decimal
+    abs_delta_dollars: Decimal
+    current_weight_of_nav: Decimal
+    target_weight: Decimal | None
+    strategy_state: str | None
+    target_state: str | None
+    reason_code: str | None
+    suggested_action: str
+
+
 class StrategyOverlayService:
     def __init__(self, db: Session):
         self.db = db
@@ -56,6 +89,21 @@ class StrategyOverlayService:
             return sleeve
         return "UNKNOWN"
 
+    def _action_from_delta(
+        self,
+        *,
+        target_dollars: Decimal,
+        delta: Decimal,
+        tolerance: Decimal,
+    ) -> str:
+        if target_dollars == 0:
+            return "EXIT"
+        if abs(delta) <= tolerance:
+            return "ON_TARGET"
+        if delta < 0:
+            return "ADD"
+        return "TRIM"
+
     def get_overlay_rows(self, sleeve: str | None = None) -> list[OverlayRow]:
         latest_date = self._latest_strategy_date()
         positions = self.valuation.get_position_valuations()
@@ -69,9 +117,6 @@ class StrategyOverlayService:
             if sleeve:
                 stmt = stmt.where(StrategySnapshot.sleeve == sleeve)
             overlays = list(self.db.scalars(stmt).all())
-
-            # Key by (symbol, sleeve), not (symbol, market), because PositionValuation
-            # in your current app does not expose .market.
             overlay_map = {(row.symbol, row.sleeve): row for row in overlays}
 
         rows: list[OverlayRow] = []
@@ -115,6 +160,99 @@ class StrategyOverlayService:
             )
 
         return rows
+
+    def get_review_metrics_and_candidates(
+        self,
+        *,
+        sleeve: str | None = None,
+        min_abs_delta: Decimal = Decimal("1000"),
+        limit: int = 25,
+        tolerance: Decimal = Decimal("250"),
+    ) -> tuple[ReviewMetrics, list[RebalanceCandidate]]:
+        rows = self.get_overlay_rows(sleeve=sleeve)
+
+        rows_with_target = 0
+        rows_without_target = 0
+        rows_with_delta = 0
+        on_target_count = 0
+        add_count = 0
+        trim_count = 0
+        exit_count = 0
+        gross_abs_delta_dollars = Decimal("0")
+        net_delta_dollars = Decimal("0")
+
+        candidates: list[RebalanceCandidate] = []
+
+        for row in rows:
+            if row.target_dollars is None:
+                rows_without_target += 1
+                continue
+
+            rows_with_target += 1
+
+            delta = row.actual_vs_target_delta
+            if delta is None:
+                actual_position = row.actual_position_dollars or row.current_market_value_base
+                delta = actual_position - row.target_dollars
+
+            rows_with_delta += 1
+            abs_delta = abs(delta)
+            gross_abs_delta_dollars += abs_delta
+            net_delta_dollars += delta
+
+            action = self._action_from_delta(
+                target_dollars=row.target_dollars,
+                delta=delta,
+                tolerance=tolerance,
+            )
+
+            if action == "ON_TARGET":
+                on_target_count += 1
+            elif action == "ADD":
+                add_count += 1
+            elif action == "TRIM":
+                trim_count += 1
+            elif action == "EXIT":
+                exit_count += 1
+
+            if abs_delta >= min_abs_delta:
+                candidates.append(
+                    RebalanceCandidate(
+                        symbol=row.symbol,
+                        security_name=row.security_name,
+                        sleeve=row.sleeve,
+                        market=row.market,
+                        country=row.country,
+                        current_market_value_base=row.current_market_value_base,
+                        target_dollars=row.target_dollars,
+                        actual_vs_target_delta=delta,
+                        abs_delta_dollars=abs_delta,
+                        current_weight_of_nav=row.current_weight_of_nav,
+                        target_weight=row.target_weight,
+                        strategy_state=row.strategy_state,
+                        target_state=row.target_state,
+                        reason_code=row.reason_code,
+                        suggested_action=action,
+                    )
+                )
+
+        candidates.sort(key=lambda item: item.abs_delta_dollars, reverse=True)
+        candidates = candidates[:limit]
+
+        metrics = ReviewMetrics(
+            overlay_row_count=len(rows),
+            rows_with_target=rows_with_target,
+            rows_without_target=rows_without_target,
+            rows_with_delta=rows_with_delta,
+            on_target_count=on_target_count,
+            add_count=add_count,
+            trim_count=trim_count,
+            exit_count=exit_count,
+            gross_abs_delta_dollars=gross_abs_delta_dollars,
+            net_delta_dollars=net_delta_dollars,
+        )
+
+        return metrics, candidates
 
     def get_recent_decision_logs(
         self,

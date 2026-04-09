@@ -6,6 +6,7 @@ import type {
   ManualStrategyOverlayUpsertResult,
   StrategyOptionsPayload,
   StrategyOverlayItem,
+  StrategyReviewPayload,
 } from "../types/strategy";
 
 export async function fetchStrategyOverlay(sleeve?: string) {
@@ -29,6 +30,22 @@ export async function fetchDecisionLog(limit = 50, sleeve?: string) {
 export async function fetchStrategyOptions() {
   const response = await apiClient.get<ApiResponse<StrategyOptionsPayload>>(
     "/api/v1/strategy/options"
+  );
+  return response.data;
+}
+
+export async function fetchStrategyReview(
+  minAbsDelta = 1000,
+  limit = 25,
+  sleeve?: string
+) {
+  const params = sleeve
+    ? { min_abs_delta: minAbsDelta, limit, sleeve }
+    : { min_abs_delta: minAbsDelta, limit };
+
+  const response = await apiClient.get<ApiResponse<StrategyReviewPayload>>(
+    "/api/v1/strategy/review",
+    { params }
   );
   return response.data;
 }

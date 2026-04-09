@@ -76,3 +76,39 @@ export type ManualStrategyOverlayUpsertResult = {
   actual_vs_target_delta: number | null;
   decision_log_written: boolean;
 };
+
+export type RebalanceCandidateItem = {
+  symbol: string;
+  security_name: string;
+  sleeve: string;
+  market: string;
+  country: string;
+  current_market_value_base: number;
+  target_dollars: number;
+  actual_vs_target_delta: number;
+  abs_delta_dollars: number;
+  current_weight_of_nav: number;
+  target_weight: number | null;
+  strategy_state: string | null;
+  target_state: string | null;
+  reason_code: string | null;
+  suggested_action: string;
+};
+
+export type StrategyReviewMetrics = {
+  overlay_row_count: number;
+  rows_with_target: number;
+  rows_without_target: number;
+  rows_with_delta: number;
+  on_target_count: number;
+  add_count: number;
+  trim_count: number;
+  exit_count: number;
+  gross_abs_delta_dollars: number;
+  net_delta_dollars: number;
+};
+
+export type StrategyReviewPayload = {
+  metrics: StrategyReviewMetrics;
+  candidates: RebalanceCandidateItem[];
+};
