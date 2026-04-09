@@ -1,3 +1,30 @@
+export type OverviewCashCurrency = {
+  base_currency: string;
+  krw_cash_native: number;
+  krw_cash_base: number;
+  usd_cash_native: number;
+  usd_cash_base: number;
+  total_cash_base: number;
+  fx_rate_krw_to_base: number;
+  fx_rate_base_to_krw: number;
+  fx_rate_timestamp: string | null;
+};
+
+export type OverviewSnapshotMetadata = {
+  holdings_snapshot_time: string | null;
+  cash_snapshot_time: string | null;
+  price_snapshot_time: string | null;
+  fx_snapshot_time: string | null;
+  holdings_source_type: string | null;
+  cash_source_type: string | null;
+  price_source_type: string | null;
+  fx_source_type: string | null;
+  holdings_detail: string | null;
+  cash_detail: string | null;
+  price_detail: string | null;
+  fx_detail: string | null;
+};
+
 export type OverviewSummary = {
   total_equity_value_base: number;
   total_cash_base: number;
@@ -8,6 +35,8 @@ export type OverviewSummary = {
   us_equity_value_base: number;
   krw_cash_base: number;
   usd_cash_base: number;
+  cash_currency: OverviewCashCurrency;
+  snapshot_metadata: OverviewSnapshotMetadata;
 };
 
 export type TopHolding = {

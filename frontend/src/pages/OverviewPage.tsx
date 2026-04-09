@@ -6,13 +6,11 @@ import {
   fetchTopHoldings,
 } from "../api/overview";
 import { SummaryCard } from "../components/cards/SummaryCard";
+import { CashCurrencyPanel } from "../components/panels/CashCurrencyPanel";
 import { ConcentrationPanel } from "../components/panels/ConcentrationPanel";
+import { SnapshotMetadataPanel } from "../components/panels/SnapshotMetadataPanel";
 import { TopHoldingsTable } from "../components/tables/TopHoldingsTable";
-import {
-  formatCurrency,
-  formatPercent,
-  formatTimestamp,
-} from "../utils/format";
+import { formatCurrency, formatPercent, formatTimestamp } from "../utils/format";
 
 export function OverviewPage() {
   const overviewQuery = useQuery({
@@ -29,9 +27,6 @@ export function OverviewPage() {
     queryKey: ["overview", "concentration"],
     queryFn: fetchConcentration,
   });
-
-  const fmtOverviewMoney = (value: number | null | undefined) =>
-    formatCurrency(value, "USD", 0);
 
   if (
     overviewQuery.isLoading ||
@@ -60,6 +55,10 @@ export function OverviewPage() {
   const topHoldings = topHoldingsQuery.data!.data;
   const concentration = concentrationQuery.data!.data;
   const snapshotTime = overviewQuery.data!.meta.snapshot_time;
+  const baseCurrency = summary.cash_currency.base_currency;
+
+  const fmtMoney = (value: number | null | undefined) =>
+    formatCurrency(value, baseCurrency, 0);
 
   return (
     <div style={{ display: "grid", gap: "24px" }}>
@@ -77,47 +76,51 @@ export function OverviewPage() {
           gap: "16px",
         }}
       >
-        <SummaryCard
-          label="Total NAV"
-          value={fmtOverviewMoney(summary.total_nav_base)}
-          subValue="Base currency: USD"
-        />
+        <SummaryCard label="Total NAV" value={fmtMoney(summary.total_nav_base)} />
         <SummaryCard
           label="Total Equity"
-          value={fmtOverviewMoney(summary.total_equity_value_base)}
+          value={fmtMoney(summary.total_equity_value_base)}
         />
-        <SummaryCard
-          label="Total Cash"
-          value={fmtOverviewMoney(summary.total_cash_base)}
-        />
+        <SummaryCard label="Total Cash" value={fmtMoney(summary.total_cash_base)} />
         <SummaryCard
           label="Unrealized P&L"
-          value={fmtOverviewMoney(summary.total_unrealized_pnl_base)}
+          value={fmtMoney(summary.total_unrealized_pnl_base)}
           subValue={formatPercent(summary.total_unrealized_return_pct)}
         />
 
         <SummaryCard
           label="KR Equity Value"
-          value={fmtOverviewMoney(summary.kr_equity_value_base)}
+          value={fmtMoney(summary.kr_equity_value_base)}
         />
         <SummaryCard
           label="US Equity Value"
-          value={fmtOverviewMoney(summary.us_equity_value_base)}
+          value={fmtMoney(summary.us_equity_value_base)}
         />
         <SummaryCard
-          label="KRW Cash (USD base)"
-          value={fmtOverviewMoney(summary.krw_cash_base)}
+          label={`KRW Cash (${baseCurrency} base)`}
+          value={fmtMoney(summary.krw_cash_base)}
         />
         <SummaryCard
           label="USD Cash"
-          value={fmtOverviewMoney(summary.usd_cash_base)}
+          value={fmtMoney(summary.usd_cash_base)}
         />
       </div>
 
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "2fr 1fr",
+          gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)",
+          gap: "16px",
+        }}
+      >
+        <CashCurrencyPanel data={summary.cash_currency} />
+        <SnapshotMetadataPanel data={summary.snapshot_metadata} />
+      </div>
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "minmax(0, 2fr) minmax(320px, 1fr)",
           gap: "16px",
           alignItems: "start",
         }}
