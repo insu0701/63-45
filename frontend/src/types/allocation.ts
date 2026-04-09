@@ -1,6 +1,8 @@
 export type SleeveAllocationItem = {
   sleeve: string;
-  market_value_base: number;
+  equity_value_base: number;
+  cash_value_base: number;
+  total_base_value: number;
   weight_of_total_nav: number;
   position_count: number;
   unrealized_pnl_base: number;

@@ -8,7 +8,7 @@ import {
 } from "../api/allocation";
 import { AllocationBarChart } from "../components/charts/AllocationBarChart";
 import { AllocationTable } from "../components/tables/AllocationTable";
-import { formatTimestamp } from "../utils/format";
+import { formatCurrency, formatTimestamp } from "../utils/format";
 
 export function AllocationPage() {
   const sleeveQuery = useQuery({
@@ -81,36 +81,54 @@ export function AllocationPage() {
 
       <div
         style={{
+          padding: "12px 16px",
+          borderRadius: "10px",
+          background: "#f9fafb",
+          border: "1px solid #e5e7eb",
+          color: "#4b5563",
+          fontSize: "14px",
+        }}
+      >
+        Sleeve allocation now includes sleeve-assigned cash, so it should no longer
+        mirror country allocation when cash is meaningful.
+      </div>
+
+      <div
+        style={{
           display: "grid",
-          gridTemplateColumns: "1fr 1fr",
+          gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)",
           gap: "16px",
-          alignItems: "start",
         }}
       >
         <AllocationBarChart
-          title="Sleeve Allocation"
+          title="Sleeve Allocation (Including Cash)"
           rows={sleeveRows.map((row) => ({
             label: row.sleeve,
-            value: row.market_value_base,
+            value: row.total_base_value,
           }))}
         />
+
         <AllocationTable
           title="Sleeve Allocation Table"
           rows={sleeveRows.map((row) => ({
             label: row.sleeve,
-            marketValueBase: row.market_value_base,
+            totalBaseValue: row.total_base_value,
             weightOfTotalNav: row.weight_of_total_nav,
-            extra: `${row.position_count} positions`,
+            extra: `${row.position_count} positions · Eq ${formatCurrency(
+              row.equity_value_base,
+              "USD",
+              0
+            )} · Cash ${formatCurrency(row.cash_value_base, "USD", 0)}`,
           }))}
+          valueLabel="USD Base Value"
         />
       </div>
 
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "1fr 1fr",
+          gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)",
           gap: "16px",
-          alignItems: "start",
         }}
       >
         <AllocationBarChart
@@ -120,6 +138,7 @@ export function AllocationPage() {
             value: row.market_value_base,
           }))}
         />
+
         <AllocationTable
           title="Country Allocation Table"
           rows={countryRows.map((row) => ({
@@ -133,9 +152,8 @@ export function AllocationPage() {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "1fr 1fr",
+          gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)",
           gap: "16px",
-          alignItems: "start",
         }}
       >
         <AllocationBarChart
@@ -145,6 +163,7 @@ export function AllocationPage() {
             value: row.market_value_base,
           }))}
         />
+
         <AllocationTable
           title="Sector Allocation Table"
           rows={sectorRows.map((row) => ({
@@ -158,9 +177,8 @@ export function AllocationPage() {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "1fr 1fr",
+          gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)",
           gap: "16px",
-          alignItems: "start",
         }}
       >
         <AllocationBarChart
@@ -170,6 +188,7 @@ export function AllocationPage() {
             value: row.total_base_value,
           }))}
         />
+
         <AllocationTable
           title="Currency Allocation Table"
           rows={currencyRows.map((row) => ({
